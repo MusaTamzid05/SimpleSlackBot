@@ -7,7 +7,13 @@ import (
 
 func main() {
 
-	_, err := bot.NewSlackBot("SLACK_BOT", "testbot")
+	bot, err := bot.NewSlackBot("SLACK_BOT", "testbot", 120)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	err = bot.SendMessage("Hello from golang")
 
 	if err != nil {
 		fmt.Println(err)
