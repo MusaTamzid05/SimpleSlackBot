@@ -6,6 +6,7 @@ import (
 )
 
 type SlackBot struct {
+	channelName string
 }
 
 func (s *SlackBot) init(environmentName string) error {
@@ -18,8 +19,13 @@ func (s *SlackBot) init(environmentName string) error {
 	return nil
 }
 
-func NewSlackBot(environmentName string) (*SlackBot, error) {
+func (s *SlackBot) SentMessage(message string) {
+
+}
+
+func NewSlackBot(environmentName, channelName string) (*SlackBot, error) {
 	bot := SlackBot{}
+	bot.channelName = channelName
 
 	err := bot.init(environmentName)
 

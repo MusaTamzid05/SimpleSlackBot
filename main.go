@@ -7,7 +7,7 @@ import (
 
 func main() {
 
-	_, err := bot.NewSlackBot("SLACK_BOT")
+	_, err := bot.NewSlackBot("SLACK_BOT", "testbot")
 
 	if err != nil {
 		fmt.Println(err)
