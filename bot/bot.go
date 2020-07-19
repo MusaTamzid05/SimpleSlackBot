@@ -5,9 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -55,6 +58,81 @@ func (s *SlackBot) SendMessage(message string) error {
 	}
 
 	fmt.Println(resStr)
+	return nil
+}
+
+func (s *SlackBot) prepareFileParameters(path string) (map[string]io.Reader, error) {
+
+	values := make(map[string]io.Reader)
+
+	fp, err := os.Open(path)
+
+	if err != nil {
+		return values, err
+	}
+
+	values["file"] = fp
+	values["channels"] = strings.NewReader(s.channelName)
+
+	return values, nil
+}
+
+func (s *SlackBot) prepareFileData(values map[string]io.Reader) (bytes.Buffer, string, error) {
+
+	var buffer bytes.Buffer
+	var err error
+	writer := multipart.NewWriter(&buffer)
+	var fw io.Writer
+
+	for key, reader := range values {
+
+		fp, ok := reader.(*os.File)
+
+		if ok {
+			if fw, err = writer.CreateFormFile(key, fp.Name()); err != nil {
+				return buffer, "", err
+			}
+		} else {
+			if fw, err = writer.CreateFormField(key); err != nil {
+				return buffer, "", err
+			}
+		}
+
+		if _, err := io.Copy(fw, reader); err != nil {
+			return buffer, "", err
+		}
+
+	}
+
+	return buffer, writer.FormDataContentType(), nil
+}
+
+func (s *SlackBot) UploadFile(path string) error {
+	// https://stackoverflow.com/questions/20205796/post-data-using-the-content-type-multipart-form-data
+	values, err := s.prepareFileParameters(path)
+
+	if err != nil {
+		return err
+	}
+
+	buffer, contentType, err := s.prepareFileData(values)
+
+	req, err := http.NewRequest("POST", "https://slack.com/api/files.upload", &buffer)
+
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", s.botKey))
+	req.Header.Set("Content-Type", contentType)
+	resBody, err := s.makeRequest(req)
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(resBody)
+
 	return nil
 }
 

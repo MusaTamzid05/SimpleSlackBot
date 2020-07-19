@@ -13,7 +13,7 @@ func main() {
 		fmt.Println(err)
 	}
 
-	err = bot.SendMessage("Hello from golang")
+	err = bot.UploadFile("/home/musa/Downloads/test_image7.jpg")
 
 	if err != nil {
 		fmt.Println(err)
